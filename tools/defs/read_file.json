@@ -1,0 +1,19 @@
+{
+    "type": "function",
+    "function": {
+        "name": "read_file",
+        "description": "Returns the contents from a certain file",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "file_name": {
+                    "type": "string",
+                    "description": "Relative file path from the current working directory to read from"
+                }
+            },
+            "required": [
+                "file_name"
+            ]
+        }
+    }
+}
