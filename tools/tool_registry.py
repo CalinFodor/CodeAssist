@@ -18,11 +18,11 @@ class ToolRegistry:
         
         self.callback_dict[function_name] = callback
     
-    def execute_tool(self,name:str) -> str:
+    def execute_tool(self,name:str,args) -> str:
         if name not in self.callback_dict:
             return f"CALLED FUNCTION {name} DOESNT EXIST"
 
-        return self.callback_dict[name]
+        return self.callback_dict[name](args)
         
         
         

@@ -1,0 +1,1 @@
+def add(x, y):\n    return x + y\n\n# Test the function\nprint(add(5, 7))
