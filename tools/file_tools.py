@@ -1,5 +1,5 @@
 import os
-
+import json
 
 def read_file(args) -> str:
     if "file_name" not in args:
@@ -28,3 +28,29 @@ def write_to_file(args) -> str:
     with open(file_path,"w",encoding='utf-8') as file:
         file.write(content)
     return "Written to file succesfully"
+
+
+def show_folder(dir_path:str) -> dict:
+    file_map = {}
+    
+    dir_name = os.path.basename(dir_path)
+    file_map[dir_name] = []
+    
+    obj = os.scandir(dir_path)
+    
+    for entry in obj:
+        if entry.is_file():
+           file_map[dir_name].append(entry.name)
+        
+        if entry.is_dir():
+           entry_contents = show_folder(entry.path) 
+           file_map[dir_name].append(entry_contents)  
+    
+    return file_map
+
+def list_dir(args) -> str:
+    cwd = args["cwd"]
+    
+    file_dict = show_folder(cwd)
+    return json.dumps(file_dict)
+        

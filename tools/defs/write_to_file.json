@@ -3,6 +3,7 @@
     "function": {
         "name": "write_to_file",
         "description": "Writes content to a file identified by a relative path",
+        "strict":true,
         "parameters": {
             "type": "object",
             "properties": {

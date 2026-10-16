@@ -3,6 +3,7 @@
     "function": {
         "name": "read_file",
         "description": "Returns the contents from a certain file",
+        "strict":true,
         "parameters": {
             "type": "object",
             "properties": {
