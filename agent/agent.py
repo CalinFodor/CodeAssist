@@ -6,10 +6,11 @@ from tools import tool_registry
 
 
 class Agent:
-    def __init__(self, url: str, api_key: str,model:str, tool_registry:tool_registry.ToolRegistry):
+    def __init__(self,cwd:str, url: str, api_key: str,model:str, tool_registry:tool_registry.ToolRegistry):
         self.client = OpenAI(base_url=url, api_key=api_key)
         self.model = model
         self.registry = tool_registry
+        self.cwd = cwd
 
     def start_task(self,task:str):
        messages =  [
@@ -33,7 +34,7 @@ class Agent:
             choice = completion.choices[0]
             
             if choice.finish_reason != 'tool_calls':
-                print("Task completed")
+                print(f"Task completed {choice.message.content}")
                 break
             
             tool_call = choice.message.tool_calls[0]
@@ -46,13 +47,12 @@ class Agent:
                     "content":task_result
                 }
             )
-            
-            
-            
-                
+
+
     def execute_tool_call(self,tool_call) -> str:  
         tool_name = tool_call.name
         tool_args = json.loads(tool_call.arguments)
+        tool_args["cwd"] = self.cwd
         
         return self.registry.execute_tool(tool_name,tool_args)
     

@@ -24,6 +24,3 @@ class ToolRegistry:
 
         return self.callback_dict[name](args)
         
-        
-        
-        
