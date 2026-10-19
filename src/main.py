@@ -1,7 +1,6 @@
 from agent import agent as ag
-from tools import file_tools
-from tools import tool_registry
-"""
+from tools import file_tools, tool_registry
+
 BASE_URL ='http://192.168.192.1:11434/v1/'
 API_KEY ='ollama'
 MODEL = 'qwen2.5:3b'
@@ -14,9 +13,9 @@ def get_user_approval(command:str) -> bool:
 if __name__ == '__main__':
     
     tool_reg = tool_registry.ToolRegistry()
-    tool_reg.register_tool("tools/defs/read_file.json",file_tools.read_file)
-    tool_reg.register_tool("tools/defs/write_to_file.json",file_tools.write_to_file)
-    tool_reg.register_tool("tools/defs/list_dir.json",file_tools.list_dir)
+    tool_reg.register_tool("tools/defs/read_file.json",file_tools.read_file,False)
+    tool_reg.register_tool("tools/defs/write_file.json",file_tools.write_file)
+    tool_reg.register_tool("tools/defs/list_dir.json",file_tools.list_dir,False)
     
     agent = ag.Agent(CWD,BASE_URL,API_KEY,MODEL,tool_reg)
     while True:
@@ -28,8 +27,6 @@ if __name__ == '__main__':
            print("Approval granted to Agent")
            continue
         agent.state = ag.AgentState.Idle   
-"""            
-             
-print(file_tools.show_folder("..",1,""))        
+
     
     

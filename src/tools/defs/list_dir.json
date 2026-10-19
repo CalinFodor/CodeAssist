@@ -2,12 +2,23 @@
     "type": "function",
     "function": {
         "name": "list_dir",
-        "description": "Recursively returns the content of the cwd (the project folder)",
+        "description": "Returns the contents of a given folder (the cwd or relative to the cwd). Returns all files and folders from the queried directory and all files and subfolders with a limit from child directories",
         "strict":true,
         "parameters": {
             "type": "object",
-            "properties": {},
-            "required": []
+            "properties": {
+                "dir": {
+                    "type": "string",
+                    "description": "Relative path to the cwd of the folder you want to explore (use . to get the contents of the cwd)"
+                },
+                "depth":{
+                    "type":"int",
+                    "description":"Maxmimum depth you want to explore the given folder (default is 3 maximum is 5)"
+                }
+            },
+            "required": [
+                "dir"
+            ]
         }
     }
 }

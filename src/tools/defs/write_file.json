@@ -1,8 +1,8 @@
 {
     "type": "function",
     "function": {
-        "name": "write_to_file",
-        "description": "Writes content to a file identified by a relative path",
+        "name": "write_file",
+        "description": "Creates a new file identified by a relative path",
         "strict":true,
         "parameters": {
             "type": "object",
@@ -10,15 +10,10 @@
                 "file_name": {
                     "type": "string",
                     "description": "Relative file path from the current working directory to write to"
-                },
-                "content": {
-                    "type": "string",
-                    "description": "The content to write to the file"
                 }
             },
             "required": [
-                "file_name",
-                "content"
+                "file_name"
             ]
         }
     }

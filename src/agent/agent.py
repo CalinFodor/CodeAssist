@@ -39,7 +39,7 @@ class Agent:
         self.cwd = cwd
         self.messages = []
         self.state = AgentState.Idle
-        self.hold_function_call = None
+        self.hold_function_call = []
 
     def start_agent_loop(self, task: str = "") -> StopReason:
         # fresh run
@@ -50,11 +50,11 @@ class Agent:
                     "content": (
                         "You are an autonomous coding assistant. Follow this execution loop strictly:\n"
                         "1. Read/inspect existing files before modifying or importing them.\n"
-                        "2. Issue exactly ONE tool call per turn. Parallel calls are forbidden.\n"
-                        "3. Do not invent or assume file contents; always use actual tool outputs.\n"
-                        "4. Save all code changes via write tools, never as markdown in chat.\n"
+                        #"2. Issue exactly ONE tool call per turn. Parallel calls are forbidden.\n"
+                        "2. Do not invent or assume file contents; always use actual tool outputs.\n"
+                        "3. Save all code changes via write tools, never as markdown in chat.\n"
                         #"5. Always run tests for functions you modify. If the projects has tests run them if not create temporary tests by writing to a new file"
-                        "5. Stop calling tools and reply in text only when the task is fully completed."
+                        "4. Stop calling tools and reply in text only when the task is fully completed."
                     ),
                 },
                 {
@@ -77,13 +77,14 @@ class Agent:
             print(completion)
 
             choice = completion.choices[0]
+            
+            print(f"{choice.message.content}")
             if choice.finish_reason != "tool_calls":
-                print(f"{choice.message.content}")
                 self.state = AgentState.Idle
                 return Done
 
             self.messages.append(choice.message)
-
+            
             tool_call = choice.message.tool_calls[0]
 
             if self.registry.approval_needed(tool_call.function.name):
