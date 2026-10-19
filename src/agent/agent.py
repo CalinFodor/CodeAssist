@@ -50,10 +50,10 @@ class Agent:
                     "content": (
                         "You are an autonomous coding assistant. Follow this execution loop strictly:\n"
                         "1. Read/inspect existing files before modifying or importing them.\n"
-                        #"2. Issue exactly ONE tool call per turn. Parallel calls are forbidden.\n"
+                        "2. Issue exactly ONE tool call per turn. Parallel calls are forbidden.\n"
                         "2. Do not invent or assume file contents; always use actual tool outputs.\n"
                         "3. Save all code changes via write tools, never as markdown in chat.\n"
-                        #"5. Always run tests for functions you modify. If the projects has tests run them if not create temporary tests by writing to a new file"
+                        "5. Always run tests for functions you modify. If the projects has tests run them if not create temporary tests by writing to a new file"
                         "4. Stop calling tools and reply in text only when the task is fully completed."
                     ),
                 },
@@ -74,10 +74,8 @@ class Agent:
     def execute_task(self) -> StopReason:
         while True:
             completion = self.send_prompt()
-            print(completion)
 
             choice = completion.choices[0]
-            
             print(f"{choice.message.content}")
             if choice.finish_reason != "tool_calls":
                 self.state = AgentState.Idle
@@ -90,7 +88,12 @@ class Agent:
             if self.registry.approval_needed(tool_call.function.name):
                 self.hold_function_call = tool_call
                 self.state = AgentState.Holding
-                return ApprovalNeeded(tool_call.function.name)
+                
+                tool_name = tool_call.function.name
+                tool_args = json.loads(tool_call.function.arguments)
+                
+                
+                return ApprovalNeeded(tool_registry.tool_print_form(tool_name,tool_args))
             
             self.execute_tool_call(tool_call=tool_call)
 
@@ -99,6 +102,8 @@ class Agent:
         tool_args = json.loads(tool_call.function.arguments)
         tool_args["cwd"] = self.cwd
 
+        print(f"Executing {tool_registry.tool_print_form(tool_name,tool_args)}...")
+        
         task_result = self.registry.execute_tool(tool_name, tool_args)
         self.messages.append(
             {

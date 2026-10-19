@@ -1,10 +1,10 @@
 from agent import agent as ag
-from tools import file_tools, tool_registry
+from tools import execute_command, file_tools, tool_registry
 
 BASE_URL ='http://192.168.192.1:11434/v1/'
 API_KEY ='ollama'
-MODEL = 'qwen2.5:3b'
-CWD = 'test_project'
+MODEL = 'qwen2.5:7b'
+CWD = '../test_project'
 
 def get_user_approval(command:str) -> bool:
     response = input(f"The Agent wants to run the following command {command}: ")
@@ -16,6 +16,8 @@ if __name__ == '__main__':
     tool_reg.register_tool("tools/defs/read_file.json",file_tools.read_file,False)
     tool_reg.register_tool("tools/defs/write_file.json",file_tools.write_file)
     tool_reg.register_tool("tools/defs/list_dir.json",file_tools.list_dir,False)
+    tool_reg.register_tool("tools/defs/edit_file.json",file_tools.edit_file)
+    tool_reg.register_tool("tools/defs/execute_command.json",execute_command.execute_command)
     
     agent = ag.Agent(CWD,BASE_URL,API_KEY,MODEL,tool_reg)
     while True:
