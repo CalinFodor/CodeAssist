@@ -1,0 +1,30 @@
+{
+    "type": "function",
+    "function": {
+        "name": "edit_file",
+        "description": "Edits a file by replacing an existing string with a new one (be specific with the string you want to replace)",
+        "strict":true,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "file_name": {
+                    "type": "string",
+                    "description": "Relative file path from the current working directory to edit"
+                },
+                "old_str":{
+                    "type":"string",
+                    "description":"String to replace with a new one"
+                },
+                "new_str":{
+                    "type":"string",
+                    "description":"String to replace the existing string with"
+                }
+            },
+            "required": [
+                "file_name",
+                "old_str",
+                "new_str"
+            ]
+        }
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "type": "function",
+    "function": {
+        "name": "execute_command",
+        "description": "Runs a command in the terminal and returns its output (stout,stderr,status_code) (prefer using the other tools for exploring the cwd and file I/O)",
+        "strict":true,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "cmd": {
+                    "type": "array",
+                    "description": "An array of strings containing the command on the first position and then its arguments on separate positions like ['ls','-la']"
+                }
+            },
+            "required": [
+                "cmd"
+            ]
+        }
+    }
+}
