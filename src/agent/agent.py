@@ -49,7 +49,7 @@ class Agent:
                     "role": "system",
                     "content": (
                         "You are an autonomous coding assistant. Follow this execution loop strictly:\n"
-                        "1. Read/inspect existing files before modifying or importing them.\n"
+                        "1. READ/INSPECT existing files before modifying or importing them. Only create new files before inspecting the directory and searching for files you can edit by reading them.\n"
                         "2. Issue exactly ONE tool call per turn. Parallel calls are forbidden.\n"
                         "2. Do not invent or assume file contents; always use actual tool outputs.\n"
                         "3. Save all code changes via write tools, never as markdown in chat.\n"
@@ -76,7 +76,12 @@ class Agent:
             completion = self.send_prompt()
 
             choice = completion.choices[0]
-            print(f"{choice.message.content}")
+            
+            if choice.message.content != "":
+                print(f"{choice.message.content}")
+            
+            print(f"Total tokens:{completion.usage.total_tokens}")
+            
             if choice.finish_reason != "tool_calls":
                 self.state = AgentState.Idle
                 return Done

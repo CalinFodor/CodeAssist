@@ -1,10 +1,10 @@
 from agent import agent as ag
 from tools import execute_command, file_tools, tool_registry
 
-BASE_URL ='http://192.168.192.1:11434/v1/'
+BASE_URL ='http://192.168.1.154:11434/v1/'
 API_KEY ='ollama'
 MODEL = 'qwen2.5:7b'
-CWD = '../test_project'
+CWD = '../test_project/exercism-python/exercises/practice/accumulate'
 
 def get_user_approval(command:str) -> bool:
     response = input(f"The Agent wants to run the following command {command}: ")

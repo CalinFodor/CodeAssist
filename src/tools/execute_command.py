@@ -4,7 +4,7 @@ import subprocess
 
 def execute_command(args) -> str:
     if not "cmd" in args:
-        return "Please provide a list containing the command and its args to be executed"
+        return "ERROR: Please provide a list containing the command and its args to be executed"
     
     cmd = args["cmd"]
     cwd = args["cwd"]
@@ -13,7 +13,7 @@ def execute_command(args) -> str:
     try:
         o, e = proc.communicate(timeout=5.0)
     except subprocess.TimeoutExpired:
-        return "Timer for command execution expired"
+        return "ERROR: Timer for command execution expired"
     
     stdout = o.decode('utf-8')
     stderr  = e.decode('utf-8')
