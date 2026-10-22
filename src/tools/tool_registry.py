@@ -9,7 +9,7 @@ def tool_print_form(name: str, tool_args) -> str:
         if param != "cwd":
             arg_list.append(f"{param}:{arg}")
 
-    return f"{name}({' '.join(arg_list)})"
+    return f"{name}({', '.join(arg_list)})"
 
 
 class ToolRegistry:
@@ -38,7 +38,9 @@ class ToolRegistry:
         if name not in self.callback_dict:
             return f"CALLED FUNCTION {name} DOESNT EXIST"
 
-        return self.callback_dict[name](args)
+        result = self.callback_dict[name](args)
+        print(f"Result: {result}")
+        return result
 
     def approval_needed(self, tool_name: str) -> bool:
         return tool_name in self.approval_tools

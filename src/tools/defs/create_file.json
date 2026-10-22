@@ -1,8 +1,8 @@
 {
     "type": "function",
     "function": {
-        "name": "write_file",
-        "description": "Creates a new file identified by a relative path. Only use ",
+        "name": "create_file",
+        "description": "Creates a new file identified by a relative path",
         "strict":true,
         "parameters": {
             "type": "object",

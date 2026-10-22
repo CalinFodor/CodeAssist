@@ -20,8 +20,14 @@ def execute_command(args) -> str:
     exit_code = str(proc.returncode)
     
     return json.dumps({
-        "stdout":stdout,
-        "stderr":stderr,
+        "stdout":last_n_lines(stdout,100),
+        "stderr":last_n_lines(stderr,100),
         "exit_code":exit_code
     })
     
+def last_n_lines(s:str,n:int) -> str:
+    lines = s.split("\n")
+    if len(lines) < n:
+        return s
+    
+    return "\n".join(s[n:])

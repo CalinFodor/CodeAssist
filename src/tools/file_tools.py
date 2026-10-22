@@ -29,21 +29,25 @@ def write_file(args) -> str:
     try:
         with open(file_path,"x") as file, open(file_path,"w") as file:
             file.write(content)
-        return "File created sucessfully"
+        return f"File {file_name} created sucessfully"
     except FileExistsError:
-        return "ERROR: File already exists"
+        return f"File {file_name} already exists"
+    except OSError as e:
+        return f"ERROR: {e}"
     
 def edit_file(args) -> str:
     if "file_name" not in args:
         return "ERROR: Incorrect usage: expected arguments file_name"
-    
+    print(args)
     file_name = args["file_name"]
     old_str = args["old_str"]
     new_str = args["new_str"]
     cwd = args["cwd"]
     
-    
     file_path = os.path.join(cwd,file_name)
+    
+    if old_str == "":
+        return "ERROR: Please provide a value for old_str"
     
     try:
         with open(file_path,"r") as file:
@@ -52,7 +56,7 @@ def edit_file(args) -> str:
         
         with open(file_path,"w") as file:
             file.write(data)
-        return "File edited"
+        return f"File {file_name} edited"
     except FileNotFoundError:
         return "ERROR: File does not exist"   
     except OSError as e:

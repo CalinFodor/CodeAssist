@@ -2,7 +2,7 @@
     "type": "function",
     "function": {
         "name": "edit_file",
-        "description": "Edits a file by replacing an existing string with a new one (be specific with the string you want to replace)",
+        "description": "Edits a file by replacing an existing string (old_str) (be specific with the string you want to replace) with a new one (new_str)",
         "strict":true,
         "parameters": {
             "type": "object",
@@ -13,11 +13,11 @@
                 },
                 "old_str":{
                     "type":"string",
-                    "description":"String to replace with a new one"
+                    "description":"Exact string to be replaced with new_str"
                 },
                 "new_str":{
                     "type":"string",
-                    "description":"String to replace the existing string with"
+                    "description":"New string to be written in the place of old_str"
                 }
             },
             "required": [
