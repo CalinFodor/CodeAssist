@@ -3,14 +3,15 @@ from collections.abc import Callable
 
 
 # this doesnt fit but i dont know where to put it yet
-def tool_print_form(name: str, tool_args) -> str:
-    arg_list = []
+def tool_print_form(name: str, tool_args:dict[str,str]) -> str:
+    arg_list:list[str] = []
     for param, arg in tool_args.items():
         if param != "cwd":
             arg_list.append(f"{param}:{arg}")
 
     return f"{name}({', '.join(arg_list)})"
 
+    
 
 class ToolRegistry:
     def __init__(self):
@@ -34,7 +35,7 @@ class ToolRegistry:
         if approval:
             self.approval_tools.append(function_name)
 
-    def execute_tool(self, name: str, args) -> str:
+    def execute_tool(self, name: str, args:list[dict[str,str]]) -> str:
         if name not in self.callback_dict:
             return f"CALLED FUNCTION {name} DOESNT EXIST"
 

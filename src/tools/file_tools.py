@@ -1,7 +1,7 @@
 import os
 
 
-def read_file(args) -> str:
+def read_file(args:dict[str,str]) -> str:
     if "file_name" not in args:
         return "ERROR: Incorrect usage: expected argument of name file_name"
     
@@ -16,7 +16,7 @@ def read_file(args) -> str:
         return f"ERROR: File {file_name} does not exist"
 
 
-def write_file(args) -> str:
+def write_file(args:dict[str,str]) -> str:
     if "file_name" not in args or "content" not in args:
         return "ERROR: Incorrect usage: expected arguments file_name"
     
@@ -35,7 +35,7 @@ def write_file(args) -> str:
     except OSError as e:
         return f"ERROR: {e}"
     
-def edit_file(args) -> str:
+def edit_file(args:dict[str,str]) -> str:
     if "file_name" not in args:
         return "ERROR: Incorrect usage: expected arguments file_name"
     print(args)
@@ -52,6 +52,10 @@ def edit_file(args) -> str:
     try:
         with open(file_path,"r") as file:
             data = file.read()
+            
+        if old_str not in data:
+            return "ERROR: old_str not found in file"    
+        
         data = data.replace(old_str,new_str)
         
         with open(file_path,"w") as file:
@@ -62,7 +66,7 @@ def edit_file(args) -> str:
     except OSError as e:
         return f"ERROR {e}"
     
-def show_folder(dir_path:str,depth:int,prefix:str,max_depth:int=3,max_files_per_dir=25) -> str:
+def show_folder(dir_path:str,depth:int,prefix:str,max_depth:int=3,max_files_per_dir:int=25) -> str:
     
     dir_name = os.path.basename(dir_path)
     result = f"{dir_name}/"
@@ -91,7 +95,7 @@ def show_folder(dir_path:str,depth:int,prefix:str,max_depth:int=3,max_files_per_
         if entry.is_file() or depth > max_depth:
            entries.append(f"{prefix}{connector}{entry.name}")
         
-        if entry.is_dir():
+        if entry.is_dir() and not entry.name.startswith('.'):
            new_prefix = depth*"| "
            entry_contents = show_folder(entry.path,depth+1,new_prefix) 
            entries.append(f"{prefix}{connector}{entry_contents}")  
@@ -99,13 +103,13 @@ def show_folder(dir_path:str,depth:int,prefix:str,max_depth:int=3,max_files_per_
     return "\n".join(entries)
     
     
-def list_dir(args) -> str:
+def list_dir(args:dict[str,str]) -> str:
     cwd = args["cwd"]
     full_path = cwd
     
     max_depth = 5
     depth = 3
-    if "depth" in args and args["depth"] <= max_depth:
+    if "depth" in args and int(args["depth"]) <= max_depth:
         depth = int(args["depth"])
     
     if "dir_name" in args:

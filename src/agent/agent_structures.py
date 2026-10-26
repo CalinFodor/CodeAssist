@@ -1,6 +1,13 @@
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from enum import Enum
 
-SYSTEM_PROMPT = (
+from openai import OpenAI
+from pydantic import BaseModel
+
+MAX_ITERATIONS = 10
+
+REACT_PROMPT = (
     "You are an autonomous coding assistant. Follow this execution loop strictly:\n"
     "1. EXPLORE FIRST: Always list the directory or search the codebase to identify existing files before taking action.\n"
     "2. PREFER EDITING: Never create a new file if an existing file can be modified or extended. Only create a file if no relevant file exists after inspecting the codebase.\n"
@@ -17,27 +24,44 @@ PLANNER_PROMPT = (
     "Supply the function calls arguments in json form"
 )
 
-EXECUTOR_PROMPT = (
-    "You are a coding assistant given an instruction,and some context and a tool to call including its paramters follow the instruction and execute the function call"
-)
+class Plan(BaseModel):
+    summary:str
+    target_files:list[str]
+    steps:list[str]
+    verify_command:str
 
-class StopReason: ...
+class StopReason(Enum):
+    TaskFinished = 1
+    NeedApproval = 2
+    MaxIterations = 3
+
+@dataclass
+class ExecutionResult:
+    stop_reason:StopReason
+    info:str
 
 
-class Done(StopReason): ...
-
-
-class ApprovalNeeded(StopReason):
-    def __init__(self, command: str):
-        super().__init__()
-        self.command = command
-
-
-class AgentStatus(Enum):
+class AgentSettings:
+    def __init__(self,url:str,api_key:str,model:str,cwd:str,task:str):
+        self.client = OpenAI(base_url=url,api_key=api_key)
+        self.model = model
+        self.cwd = cwd
+        self.task = task
+        
+class AgentState(Enum):
     Idle = 1
-    Holding = 2
+    WaitingForApproval = 2
     Executing = 3
+    Exploring = 4
+    Planning = 5
+    Verifying = 6
 
-class AgentMode(Enum):
+class AgentStrategyType(Enum):
     ReAct = 1
     PlanAndSolve = 2
+    
+class AgentStrategy(ABC):
+    @abstractmethod
+    def run(self,approved:bool) -> ExecutionResult:
+        pass
+    

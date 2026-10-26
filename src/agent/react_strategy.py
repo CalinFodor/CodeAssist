@@ -1,35 +1,46 @@
 import json
 
-from agent.agent_data import *
+from openai.types.chat import (
+    ChatCompletion,
+    ChatCompletionMessageFunctionToolCall,
+    ChatCompletionMessageParam,
+)
+
+from agent.agent_structures import *
 from tools import tool_registry
 
 
-class ReactStrategy:
-    def __init__(self,client,model,cwd,tools:tool_registry.ToolRegistry):
-        self.cwd = cwd
-        self.tools = tools
-        self.messages = []
-        self.client = client
-        self.model = model
+class ReactStrategy(AgentStrategy):
+    def __init__(self,settings:AgentSettings,tools:tool_registry.ToolRegistry):
+        self.cwd = settings.cwd
+        self.client = settings.client
+        self.model = settings.model
         self.registry = tools
-        self.state = AgentStatus.Idle
-        self.hold_function_call = None
+        self.state = AgentState.Idle
+        self.tools_to_approve:list[ChatCompletionMessageFunctionToolCall] = []
+        
+        self.iterations = 0
+        self.messages:list[ChatCompletionMessageParam] = []
+        self.task = settings.task
+        self.init_messages()
     
-    def init_loop(self,task:str):
+    def init_messages(self):
         self.messages = [
                 {
                     "role": "system",
-                    "content": SYSTEM_PROMPT,
+                    "content":REACT_PROMPT ,
                 },
                 {
                     "role": "user",
-                    "content": task,
+                    "content": self.task,
                },
             ]
-        self.state = AgentStatus.Executing
     
-    def loop(self) -> StopReason:
-        while True:
+    def run(self,approved:bool) -> ExecutionResult:
+        if self.state == AgentState.WaitingForApproval:
+            self.resume(approved)
+        
+        while self.iterations < MAX_ITERATIONS:
             completion = self.send_react_prompt()
 
             choice = completion.choices[0]
@@ -40,26 +51,37 @@ class ReactStrategy:
             print(f"Total tokens:{completion.usage.total_tokens}")
             
             if choice.finish_reason != "tool_calls":
-                self.state = AgentStatus.Idle
-                return Done
+                self.state = AgentState.Idle
+                return ExecutionResult(StopReason.TaskFinished,choice.message.content)
 
-            
-            tool_call = choice.message.tool_calls[0]
             self.messages.append(choice.message)
-
-            if self.registry.approval_needed(tool_call.function.name):
-                self.hold_function_call = tool_call
-                self.state = AgentStatus.Holding
-                
-                tool_name = tool_call.function.name
-                tool_args = json.loads(tool_call.function.arguments)
-                
-                return ApprovalNeeded(tool_registry.tool_print_form(tool_name,tool_args))
             
-            self.execute_tool_call(tool_call=tool_call)
-        
+            for tool in choice.message.tool_calls:
+                if self.registry.approval_needed(tool.function.name):
+                    self.tools_to_approve.append(tool)
+                else:
+                    self.execute_tool_call(tool_call=tool)
+            
+            if len(self.tools_to_approve) != 0:
+               info = ""
+               for tool in self.tools_to_approve:
+                   info += f"{tool.function.name}-{tool.function.arguments}\n" 
+               self.state = AgentState.WaitingForApproval
+               return ExecutionResult(StopReason.NeedApproval,info) 
+            
+            self.iterations += 1
+        return ExecutionResult(StopReason.MaxIterations,"Reached max iterations")
     
-    def execute_tool_call(self, tool_call):
+    def send_react_prompt(self) -> ChatCompletion:
+            chat_completion = self.client.chat.completions.create(
+                messages=self.messages,
+                model=self.model,
+                tools=self.registry.schemas, # type: ignore
+                extra_body={"think":False},
+            )
+            return chat_completion 
+   
+    def execute_tool_call(self, tool_call:ChatCompletionMessageFunctionToolCall):
         tool_name = tool_call.function.name
         tool_args = json.loads(tool_call.function.arguments)
         tool_args["cwd"] = self.cwd
@@ -76,17 +98,16 @@ class ReactStrategy:
         )
 
 
-    def send_react_prompt(self):
-        chat_completion = self.client.chat.completions.create(
-            messages=self.messages,
-            model=self.model,
-            tools=self.registry.schemas,
-            extra_body={"options": {"num_ctx": 16384}},
-            parallel_tool_calls=False
-        )
-        return chat_completion     
-    
-    def resume_hold_call(self):
-        self.execute_tool_call(self.hold_function_call)
-        self.hold_function_call = None
-        self.state = AgentStatus.Executing
+    def resume(self,approved:bool):
+        for tool_call in self.tools_to_approve:
+            if approved:
+                self.execute_tool_call(tool_call)
+            else:
+                self.messages.append({
+                     "role": "tool",
+                      "tool_call_id": tool_call.id,
+                      "content": "USER Denied this tool call"
+                })
+                
+        self.tools_to_approve = []
+        self.state = AgentState.Executing

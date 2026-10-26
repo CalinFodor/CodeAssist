@@ -1,11 +1,11 @@
-from agent import agent as ag
-from agent import agent_data
+import agent.agent as ag
+from agent.agent_structures import *
 from tools import execute_command, file_tools, tool_registry
 
 BASE_URL ='http://192.168.1.154:11434/v1/'
 API_KEY ='ollama'
-MODEL = 'qwen2.5:7b'
-CWD = '../test_project/exercism-python/exercises/practice/accumulate'
+MODEL = 'gemma4:e4b'
+CWD = '../test_project/exercism-python/exercises/practice/acronym'
 
 def get_user_approval(command:str) -> bool:
     response = input(f"The Agent wants to run the following command {command}: ")
@@ -20,16 +20,17 @@ if __name__ == '__main__':
     tool_reg.register_tool("tools/defs/edit_file.json",file_tools.edit_file)
     tool_reg.register_tool("tools/defs/execute_command.json",execute_command.execute_command)
     
-    agent = ag.Agent(CWD,BASE_URL,API_KEY,MODEL,tool_reg,agent_data.AgentMode.ReAct)
-    while True:
-        if agent.strategy.state == ag.AgentStatus.Idle:
-            prompt = input("Prompt the model: ")
-        stop_reason = agent.start_agent_loop(prompt)
-        
-        if isinstance(stop_reason,ag.ApprovalNeeded) and get_user_approval(stop_reason.command):
-           print("Approval granted to Agent")
-           continue
-        agent.strategy.state = ag.AgentStatus.Idle   
-
+    #prompt = input("Prompt the model: ")
+    prompt = "One test for acronym.py is failing run pytest and fix the problem"
+    settings = AgentSettings(BASE_URL,API_KEY,MODEL,CWD,prompt)
+    agent = ag.Agent(settings,tool_reg,AgentStrategyType.ReAct)
+    execution_result = agent.run(True)
     
+    while True:
+        if execution_result.stop_reason == StopReason.NeedApproval:
+           execution_result = agent.run(get_user_approval(execution_result.info)) 
+        else:
+            break
+        
+    print(execution_result.info)
     
