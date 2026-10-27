@@ -18,11 +18,31 @@ REACT_PROMPT = (
     "7. COMPLETION: Stop calling tools and reply in plain text only when the task is fully completed."
 )
 
-PLANNER_PROMPT = (
-    "You are an expert planner for coding tasks"
-    "Given a directory structure and a given objective issue a step by step to be followed by a LLM with precise instructions and function calls"
-    "Supply the function calls arguments in json form"
-)
+PLANNER_PROMPT = """
+You are an expert software execution planner.
+
+Your goal is to synthesize the task objective, repository structure, and the Explorer's diagnostic analysis into a structured, executable coding plan.
+
+### Instructions:
+- **summary**: Provide a concise summary (1-3 sentences) explaining the root cause and the overall strategy for the fix.
+- **target_files**: List only the specific, relevant file paths that must be modified or created. Keep the blast radius minimal based on the Explorer's findings.
+- **steps**: Provide an ordered sequence of clear, actionable instructions. Focus on intent, logic changes, and acceptance criteria rather than low-level tool calls or exact diffs. The executor should know exactly what behavior to implement in each step.
+- **verification_command**: Provide a single, deterministic command (e.g., a specific `pytest` command, test runner script, or reproduction command) that the executor will run to confirm the issue is completely resolved.
+/no_think
+"""
+
+EXPLORER_PROMPT = """
+You are an expert diagnostic agent specialized in root-cause analysis for software bugs.
+
+Your goal is to inspect the codebase, reproduce the reported issue, and identify the exact lines and files responsible.
+### Protocol:
+1. **Reconnaissance**: Inspect directory structures and locate configuration/dependency files (e.g., package.json, pyproject.toml).
+2. **Reproduction**: Run relevant test suites (e.g., `pytest`, `npm test`) or inspect log outputs to confirm failing conditions.
+3. **Trace & Isolate**: Read relevant source files and track data flow leading to the failure. Minimize tool calls by inspecting only suspected code paths.
+4. **Handoff Generation**: Once identified, synthesize findings. Do NOT attempt to fix the bug yourself.
+
+IMPORTANT: When you are finished with the inspection do not call any tools and just respond in text. /no_think
+"""
 
 class Plan(BaseModel):
     summary:str
@@ -49,12 +69,11 @@ class AgentSettings:
         self.task = task
         
 class AgentState(Enum):
-    Idle = 1
+    Executing = 1
     WaitingForApproval = 2
-    Executing = 3
-    Exploring = 4
-    Planning = 5
-    Verifying = 6
+    Exploring = 3
+    Planning = 4
+    Verifying = 5
 
 class AgentStrategyType(Enum):
     ReAct = 1

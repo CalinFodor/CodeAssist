@@ -30,4 +30,4 @@ def last_n_lines(s:str,n:int) -> str:
     if len(lines) < n:
         return s
     
-    return "\n".join(s[n:])
+    return "\n".join(lines[n:])

@@ -11,24 +11,25 @@ from tools import tool_registry
 
 
 class ReactStrategy(AgentStrategy):
-    def __init__(self,settings:AgentSettings,tools:tool_registry.ToolRegistry):
+    def __init__(self,settings:AgentSettings,tools:tool_registry.ToolRegistry,system_prompt:str,max_iterations:int):
         self.cwd = settings.cwd
         self.client = settings.client
         self.model = settings.model
         self.registry = tools
-        self.state = AgentState.Idle
         self.tools_to_approve:list[ChatCompletionMessageFunctionToolCall] = []
         
+        self.max_iterations = max_iterations
         self.iterations = 0
         self.messages:list[ChatCompletionMessageParam] = []
         self.task = settings.task
-        self.init_messages()
-    
-    def init_messages(self):
+        self.init_messages(system_prompt)
+        self.state = AgentState.Executing
+
+    def init_messages(self,system_prompt:str):
         self.messages = [
                 {
                     "role": "system",
-                    "content":REACT_PROMPT ,
+                    "content":system_prompt,
                 },
                 {
                     "role": "user",
@@ -38,9 +39,9 @@ class ReactStrategy(AgentStrategy):
     
     def run(self,approved:bool) -> ExecutionResult:
         if self.state == AgentState.WaitingForApproval:
-            self.resume(approved)
+            self.__resume(approved)
         
-        while self.iterations < MAX_ITERATIONS:
+        while self.iterations < self.max_iterations:
             completion = self.send_react_prompt()
 
             choice = completion.choices[0]
@@ -51,7 +52,7 @@ class ReactStrategy(AgentStrategy):
             print(f"Total tokens:{completion.usage.total_tokens}")
             
             if choice.finish_reason != "tool_calls":
-                self.state = AgentState.Idle
+                print(choice.message.content)
                 return ExecutionResult(StopReason.TaskFinished,choice.message.content)
 
             self.messages.append(choice.message)
@@ -77,7 +78,12 @@ class ReactStrategy(AgentStrategy):
                 messages=self.messages,
                 model=self.model,
                 tools=self.registry.schemas, # type: ignore
-                extra_body={"think":False},
+                extra_body={
+                    "options": {
+                        "num_ctx": 8192  # Adjust context window (e.g., 8192, 16384, 32768)
+                    },
+                    "think":False
+                }
             )
             return chat_completion 
    
@@ -98,7 +104,7 @@ class ReactStrategy(AgentStrategy):
         )
 
 
-    def resume(self,approved:bool):
+    def __resume(self,approved:bool):
         for tool_call in self.tools_to_approve:
             if approved:
                 self.execute_tool_call(tool_call)

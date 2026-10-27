@@ -66,9 +66,12 @@ def edit_file(args:dict[str,str]) -> str:
     except OSError as e:
         return f"ERROR {e}"
     
-def show_folder(dir_path:str,depth:int,prefix:str,max_depth:int=3,max_files_per_dir:int=25) -> str:
+def show_folder(dir_path:str,cwd:str,depth:int,prefix:str,max_depth:int=3,max_files_per_dir:int=25) -> str:
     
     dir_name = os.path.basename(dir_path)
+    if dir_name == cwd and depth == 1:
+       dir_name = '.' 
+    
     result = f"{dir_name}/"
     
     if depth > max_depth:
@@ -95,14 +98,15 @@ def show_folder(dir_path:str,depth:int,prefix:str,max_depth:int=3,max_files_per_
         if entry.is_file() or depth > max_depth:
            entries.append(f"{prefix}{connector}{entry.name}")
         
-        if entry.is_dir() and not entry.name.startswith('.'):
+        if entry.is_dir() and not entry.name.startswith('.') and not entry.name in IGNORE_FOLDERS:
            new_prefix = depth*"| "
-           entry_contents = show_folder(entry.path,depth+1,new_prefix) 
+           entry_contents = show_folder(entry.path,cwd,depth+1,new_prefix) 
            entries.append(f"{prefix}{connector}{entry_contents}")  
     
     return "\n".join(entries)
     
-    
+IGNORE_FOLDERS = ['__pycache__','node_modules']
+
 def list_dir(args:dict[str,str]) -> str:
     cwd = args["cwd"]
     full_path = cwd
@@ -116,7 +120,8 @@ def list_dir(args:dict[str,str]) -> str:
         dir = args["dir_name"]
         full_path = os.path.join(cwd,dir)
     
-    return show_folder(full_path,1,"",max_depth=depth)
+    cwd_name = os.path.basename(cwd)
+    return show_folder(full_path,cwd_name,1,"",max_depth=depth)
     
     
         

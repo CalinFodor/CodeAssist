@@ -4,8 +4,8 @@ from tools import execute_command, file_tools, tool_registry
 
 BASE_URL ='http://192.168.1.154:11434/v1/'
 API_KEY ='ollama'
-MODEL = 'gemma4:e4b'
-CWD = '../test_project/exercism-python/exercises/practice/acronym'
+MODEL = 'qwen3:8b'
+CWD = '../test_project/exercism-python/exercises/practice/accumulate'
 
 def get_user_approval(command:str) -> bool:
     response = input(f"The Agent wants to run the following command {command}: ")
@@ -21,9 +21,10 @@ if __name__ == '__main__':
     tool_reg.register_tool("tools/defs/execute_command.json",execute_command.execute_command)
     
     #prompt = input("Prompt the model: ")
-    prompt = "One test for acronym.py is failing run pytest and fix the problem"
+    print("Running...")
+    prompt = "The tests for accumulate.py is failing run pytest and fix the problem use the tools provided"
     settings = AgentSettings(BASE_URL,API_KEY,MODEL,CWD,prompt)
-    agent = ag.Agent(settings,tool_reg,AgentStrategyType.ReAct)
+    agent = ag.Agent(settings,tool_reg,AgentStrategyType.PlanAndSolve)
     execution_result = agent.run(True)
     
     while True:

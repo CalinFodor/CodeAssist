@@ -12,7 +12,7 @@
                     "description": "Relative path to the cwd of the folder you want to explore (use . to get the contents of the cwd)"
                 },
                 "depth":{
-                    "type":"int",
+                    "type":"integer",
                     "description":"Maxmimum depth you want to explore the given folder (default is 3 maximum is 5)"
                 }
             },
